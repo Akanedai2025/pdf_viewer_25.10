@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PDF資料一覧</title>
+
+  <!-- pdf.js ライブラリ読み込み -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script>
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  </script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    h1 {
+      margin-bottom: 20px;
+    }
+    .pdf-container {
+      margin-bottom: 40px;
+    }
+    .pdf-title {
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    canvas {
+      display: block;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>PDF資料一覧</h1>
+  <div id="pdf-list"></div>
+
+  <script>
+    const pdfs = [
+      { name: "01_あかね台フェス.pdf", path: "pdf/01_あかね台フェス.pdf" },
+      { name: "02_伊勢原クリーンデー.pdf", path: "pdf/02_伊勢原クリーンデー.pdf" },
+      { name: "11_いせはらクリーンでー市役所より.pdf", path: "pdf/11_いせはらクリーンでー市役所より.pdf" },
+      { name: "12_元気応援講座.pdf", path: "pdf/12_元気応援講座.pdf" },
+      { name: "13_食料品支援のご案内.pdf", path: "pdf/13_食料品支援のご案内.pdf" },
+      { name: "14_高齢者_65歳以上_予防接種のご案内.pdf", path: "pdf/14_高齢者_65歳以上_予防接種のご案内.pdf" },
+      { name: "15_いせはらだより.pdf", path: "pdf/15_いせはらだより.pdf" },
+      { name: "16_伊勢原市民文化祭.pdf", path: "pdf/16_伊勢原市民文化祭.pdf" },
+      { name: "17_地域安全ニュース.pdf", path: "pdf/17_地域安全ニュース.pdf" },
+      { name: "18_伊勢原支援学校_学校見学ツアー.pdf", path: "pdf/18_伊勢原支援学校_学校見学ツアー.pdf" },
+      { name: "19_成小だより.pdf", path: "pdf/19_成小だより.pdf" },
+      { name: "21_スポーツ推進委員だより.pdf", path: "pdf/21_スポーツ推進委員だより.pdf" },
+      { name: "22_記念講演会.pdf", path: "pdf/22_記念講演会.pdf" },
+      { name: "23_消防団員募集.pdf", path: "pdf/23_消防団員募集.pdf" },
+    ];
+
+    const pdfListDiv = document.getElementById('pdf-list');
+
+    async function renderPDF(name, url) {
+      const container = document.createElement('div');
+      container.className = 'pdf-container';
+
+      const title = document.createElement('div');
+      title.className = 'pdf-title';
+      title.textContent = name;
+      container.appendChild(title);
+
+      try {
+        const loadingTask = pdfjsLib.getDocument(url);
+        const pdf = await loadingTask.promise;
+        for(let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+          const page = await pdf.getPage(pageNum);
+          const viewport = page.getViewport({ scale: 1.2 });
+          const canvas = document.createElement('canvas');
+          const context = canvas.getContext('2d');
+          canvas.height = viewport.height;
+          canvas.width = viewport.width;
+          container.appendChild(canvas);
+          const renderContext = {
+            canvasContext: context,
+            viewport: viewport
+          };
+          await page.render(renderContext).promise;
+        }
+      } catch (error) {
+        container.appendChild(document.createTextNode('PDFの読み込みに失敗しました。'));
+        console.error('Error loading PDF:', error);
+      }
+
+      pdfListDiv.appendChild(container);
+    }
+
+    // PDFを順にレンダリング
+    (async () => {
+      for(const pdf of pdfs) {
+        await renderPDF(pdf.name, pdf.path);
+      }
+    })();
+  </script>
+
+</body>
+</html>
